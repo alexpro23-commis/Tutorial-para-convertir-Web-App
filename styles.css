@@ -1,0 +1,59 @@
+body {
+font-family: Arial, sans-serif;
+background: #f0f2f5;
+margin: 0;
+}
+
+
+.container {
+width: 320px;
+margin: 120px auto;
+background: white;
+padding: 25px;
+text-align: center;
+border-radius: 10px;
+box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+
+input {
+width: 90%;
+padding: 10px;
+margin-top: 10px;
+border-radius: 8px;
+border: 1px solid #bbb;
+}
+
+
+button {
+margin-top: 15px;
+padding: 10px;
+width: 90%;
+border: none;
+background: #00aaff;
+color: white;
+font-size: 16px;
+border-radius: 8px;
+cursor: pointer;
+}
+
+
+nav {
+background: #0077cc;
+padding: 10px;
+display: flex;
+gap: 10px;
+}
+nav a {
+color: white;
+text-decoration: none;
+font-weight: bold;
+}
+nav button {
+background: red;
+padding: 5px 10px;
+}
+.puch{
+    width: 50;
+    height: 50;
+}

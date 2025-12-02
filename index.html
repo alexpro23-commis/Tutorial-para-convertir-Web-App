@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Proyecto: Tutorial para convertir Web → App (Login local)</title>
+  <meta name="description" content="Página tutorial que cubre sensores, notificaciones, toolkits, depuración, empaquetado y distribución. Incluye login local (sin MySQL) y soporte offline (Service Worker).">
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#06b6d4;--muted:#98a0ad;--glass:rgba(255,255,255,0.03)}
+    *{box-sizing:border-box;font-family:Inter,system-ui,Segoe UI,Arial;margin:0}
+    body{background:linear-gradient(180deg,#071028 0,#07192a 100%);color:#e6eef6;min-height:100vh;padding:20px}
+    header{display:flex;gap:12px;align-items:center;margin-bottom:18px}
+    .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#7c3aed);display:flex;align-items:center;justify-content:center;font-weight:700}
+    h1{font-size:1.1rem}
+    p.lead{color:var(--muted);font-size:0.95rem}
+    .layout{display:grid;grid-template-columns:280px 1fr;gap:18px}
+    nav{background:var(--card);padding:12px;border-radius:12px;height:calc(100vh - 140px);overflow:auto}
+    nav h3{font-size:0.9rem;margin-bottom:8px}
+    nav ul{list-style:none;padding:0}
+    nav li{padding:8px;border-radius:8px;margin-bottom:6px;cursor:pointer;color:var(--muted)}
+    nav li.active{background:var(--glass);color:#fff}
+    main{background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);padding:18px;border-radius:12px;height:calc(100vh - 140px);overflow:auto}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);padding:14px;border-radius:10px;margin-bottom:12px;box-shadow:0 6px 18px rgba(2,6,23,0.5)}
+    .muted{color:var(--muted);font-size:0.95rem}
+    .rightTop{display:flex;gap:8px;justify-content:flex-end}
+
+    /* Login */
+    .loginWrap{display:flex;flex-direction:column;gap:8px;max-width:420px}
+    input,button,select,textarea{padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:inherit}
+    button{background:var(--accent);border:none;color:#022;cursor:pointer;font-weight:600}
+    .small{font-size:0.85rem;color:var(--muted)}
+
+    pre.hl{background:#061022;padding:10px;border-radius:8px;overflow:auto;color:#cfe}
+    footer{margin-top:12px;color:var(--muted);font-size:0.84rem}
+
+    @media(max-width:900px){.layout{grid-template-columns:1fr}nav{height:auto}.rightTop{justify-content:flex-start}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="logo">APP</div>
+  <div>
+    <h1>Proyecto: Tutorial para convertir Web → App</h1>
+    <p class="lead">Contenido en modo tutorial + <strong>login local </strong> y funcionalidad offline (PWA básica).</p>
+  </div>
+  <div style="margin-left:auto" class="rightTop">
+    <div id="userBadge" class="muted">No autenticado</div>
+  </div>
+</header>
+
+<div class="layout">
+  <nav>
+    <h3>Secciones (tutorial)</h3>
+    <ul id="menu">
+      <li class="active" data-section="inicio">Inicio</li>
+      <li data-section="login">Login local</li>
+      <li data-section="sensores">Gestión de sensores</li>
+      <li data-section="notificaciones">Servicios y notificaciones</li>
+      <li data-section="librerias">Librerías y toolkits</li>
+      <li data-section="depuracion">Depuración y seguridad</li>
+      <li data-section="empaquetado">Empaquetado y despliegue</li>
+      <li data-section="plataformas">Plataformas y distribución</li>
+      <li data-section="referencias">Referencias & Versionado</li>
+    </ul>
+  </nav>
+
+  <main id="content">
+    <!-- Secciones inyectadas por JS -->
+  </main>
+</div>
+
+
+<script>
+// --- Datos de contenido (modo tutorial, corto y claro) ---
+const SECTIONS = {
+  inicio: `
+    <div class="card">
+      <h2>Bienvenido — Objetivo del proyecto</h2>
+      <p class="muted">Crear una página web que funcione como tutorial y pueda convertirse en app. Debe incluir: Login local (sin MySQL), tutoriales con ejemplos, imágenes y soporte offline.</p>
+      <p>En este prototipo encontrarás una <strong>zona de registro/login local</strong>, y distintas secciones que explican: sensores, notificaciones, librerías, depuración, empaquetado y distribución.</p>
+    </div>
+
+    <div class="card">
+      <h3>Cómo usar este prototipo</h3>
+      <ol class="muted">
+        <li>Regístrate en la sección <strong>Login local</strong>.</li>
+        <li>Inicia sesión y navega por los tutoriales.</li>
+        <li>Para probar offline: sirve la carpeta con un servidor local (ej. <code>npx serve</code> o Python simple) y visita la app una vez — el Service Worker cacheará los recursos.</li>
+      </ol>
+    </div>
+    `,
+
+  login: `
+    <div class="card">
+      <h2>Login local </h2>
+      <p class="muted">Este ejemplo usa <code>localStorage</code> para guardar usuarios (no recomendado para producción). Es ideal para prototipos o entornos educativos.</p>
+
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <div style="flex:1;min-width:260px">
+          <h4>Registrar</h4>
+          <form id="registerForm" class="loginWrap">
+            <input id="r_name" placeholder="Nombre" required />
+            <input id="r_email" placeholder="Correo (será tu usuario)" required />
+            <input id="r_pass" placeholder="Contraseña" type="password" required />
+            <button type="submit">Registrar</button>
+            <div class="small">Los datos se guardan en <code>localStorage</code>.</div>
+          </form>
+        </div>
+
+        <div style="flex:1;min-width:260px">
+          <h4>Entrar</h4>
+          <form id="loginForm" class="loginWrap">
+            <input id="l_email" placeholder="Correo" required />
+            <input id="l_pass" placeholder="Contraseña" type="password" required />
+            <button type="submit">Entrar</button>
+            <button type="button" id="logoutBtn" style="display:none">Cerrar sesión</button>
+            <div id="loginMsg" class="small"></div>
+          </form>
+        </div>
+      </div>
+
+      <div class="small" style="margin-top:10px">Código relevante (simplificado):</div>
+      <pre class="hl">// guarda un objeto {name,email,passHash}
+localStorage.setItem('users', JSON.stringify(usersArray));
+// login: buscar por email y comparar contraseña (en texto aquí; en producción usa hashing)</pre>
+
+    </div>
+  `,
+
+  sensores: `
+    <div class="card">
+      <h2>Gestión de sensores (tutorial)</h2>
+      <p class="muted">En móviles, los sensores más comunes son: acelerómetro, giroscopio, magnetómetro, barómetro, GPS, sensor de proximidad y luz ambiente.</p>
+
+      <h4>Ejemplo: leer acelerómetro (Browser API)</h4>
+      <p class="muted">Algunos navegadores móviles permiten acceder a sensores mediante eventos (DeviceMotion).</p>
+      <pre class="hl">window.addEventListener('devicemotion', e =&gt; {
+  const ax = e.accelerationIncludingGravity.x;
+  const ay = e.accelerationIncludingGravity.y;
+  const az = e.accelerationIncludingGravity.z;
+  // procesar datos
+});</pre>
+
+      <h4>Buenas prácticas</h4>
+      <ul class="muted">
+        <li>Pedir permisos explícitos.</li>
+        <li>Reducir frecuencia de muestreo para ahorrar batería.</li>
+        <li>Filtrar ruido y calibrar si es necesario.</li>
+      </ul>
+    </div>
+  `,
+
+  notificaciones: `
+    <div class="card">
+      <h2>Servicios y notificaciones en App</h2>
+      <h4>Notificaciones push (concepto)</h4>
+      <p class="muted">En web se usan Push API + Service Worker + un servidor push. Para apps nativas se usan Firebase / APNs.</p>
+      <pre class="hl">// pedir permiso
+Notification.requestPermission().then(p => console.log('permiso',p));
+// mostrar notificación simple
+if(Notification.permission === 'granted'){
+  new Notification('Hola', {body:'Esta es una notificación local.'});
+}</pre>
+
+      <h4>Tareas en segundo plano</h4>
+      <p class="muted">En PWA el soporte es limitado. Para tareas recurrentes en móviles se usan WorkManager (Android) o Background Tasks (iOS) cuando se convierte a natívo.</p>
+      <a href="https://www.ibm.com/mx-es/think/topics/push-notifications">Notificación push</a>
+    </div>
+    <img class="puch" src="H1.png">
+  `,
+
+  librerias: `
+    <div class="card">
+      <h2>Librerías y toolkits para desarrollo móvil</h2>
+      <p class="muted">Al convertir a app, estas herramientas son útiles:</p>
+      <ul class="muted">
+        <li><strong>Capacitor</strong> / Cordova: para acceder a APIs nativas desde web.</li>
+        <li><strong>Ionic</strong>: componentes UI móviles.</li>
+        <li><strong>PWABuilder</strong>: ayuda a convertir y empaquetar PWA.</li>
+        <li><strong>Firebase</strong>: autenticación, notificaciones y base de datos en tiempo real.</li>
+      </ul>
+
+      <h4>Ejemplo: usar una librería</h4>
+      <p class="muted">Añadir SDKs o scripts y documentar versiones. Siempre prueba en dispositivos reales.</p>
+      <a href="https://www.ionos.mx/digitalguide/paginas-web/desarrollo-web/frameworks-javascript-y-librerias-populares/">link a librerias en JavaScript</a>
+    </div>
+    <img src="no.jpeg">
+  `,
+
+  depuracion: `
+    <div class="card">
+      <h2>Depuración y seguridad</h2>
+      <ul class="muted">
+        <li>Usa <strong>DevTools</strong> para depurar JS, red y performance.</li>
+        <li>Registros: usa <code>console.log</code>, y en producción un logger remoto (sólo errores).</li>
+        <li>Refactoriza por módulos; mantén pruebas básicas.</li>
+        <li>Mecanismos de seguridad: permisos, almacenamiento seguro (no guardar contraseñas en texto), CORS, HTTPS.</li>
+        <a href="https://developers.google.com/search/blog/2018/12/why-how-to-secure-your-website-https?hl=es">Seguridad y Depuracion</a>
+      </ul>
+    </div>
+    <img src="otr.png">
+  `,
+
+  empaquetado: `
+    <div class="card">
+      <h2>Herramientas para empaquetado y despliegue</h2>
+      <p class="muted">Opciones para convertir tu web en app:</p>
+      <ul class="muted">
+        <li><strong>Capacitor</strong>: envolver web como app nativa.</li>
+        <li><strong>PWABuilder</strong>: generar paquetes para Play Store / App Store.</li>
+        <li><strong>Electron</strong>: para escritorio.</li>
+      </ul>
+
+      <h4>Tipos de pruebas</h4>
+      <ul class="muted">
+        <li>Pruebas abiertas: beta testers.</li>
+        <li>Pruebas cerradas: grupo controlado.</li>
+        <li>Pruebas internas: QA.</li>
+        <a href="https://www.mimic.agency/es/soluciones-a-medida?gad_source=1&gad_campaignid=23298718699&gbraid=0AAAABCCuy-eqbQXhHo1ZKtrdAanKkAurP&gclid=Cj0KCQiAubrJBhCbARIsAHIdxD-NYJV4DDjnzpU0ItS-hNpMVzpHFGd-xnaEnbbqobY6SkLZyK2-4ioaAjYbEALw_wcB">Herramientas para empaquetado</a>
+
+
+      </ul>
+    </div>
+    <img src="dep.jpeg">
+  `,
+
+  plataformas: `
+    <div class="card">
+      <h2>Plataformas y canales de distribución</h2>
+      <p class="muted">Requisitos y políticas varían: Play Store (Android), App Store (iOS), tiendas empresariales, y distribuciones internas.</p>
+
+      <h4>Consejo</h4>
+      <p class="muted">Lee políticas de cada tienda, prepara íconos y fichas, y versiona tu aplicación.</p>
+      <a href="https://support.google.com/googleplay/android-developer/answer/6223646?hl=es-419">Requisitos para la distribución de apps en regiones o países </a>
+
+    </div>
+    <img src="ab.png">
+
+  `,
+
+  referencias: `
+    <div class="card">
+      <h2>Referencias & Versionado</h2>
+      <ul class="muted">
+        <li>Usa Git para control de versiones. Crea un README con pasos para instalar/convertir.</li>
+        <li>Incluye ejemplos, imágenes y enlaces: MDN, Web.dev, documentación de Capacitor/Ionic/Firebase.</li>
+      </ul>
+      <h4>Ejemplo de comandos útiles</h4>
+      <pre class="hl">git init
+git add .
+git commit -m "Primera versión: tutorial + login local"
+# Para convertir a PWA: add service worker y manifest
+<a href="https://alexpro23-commis.github.io/Tutorial-para-convertir-Web/">Control desde github</a>
+
+
+</pre>
+    </div>
+
+    <img src="fr.png">
+
+
+  `
+};
+
+// --- Render y navegación ---
+const menu = document.getElementById('menu');
+const content = document.getElementById('content');
+menu.addEventListener('click', e=>{
+  const li = e.target.closest('li'); if(!li) return;
+  [...menu.querySelectorAll('li')].forEach(x=>x.classList.remove('active'));
+  li.classList.add('active');
+  const s = li.dataset.section;
+  content.innerHTML = SECTIONS[s] || '<div class="card">No encontrado</div>';
+  if(s==='login') attachLoginHandlers();
+});
+content.innerHTML = SECTIONS.inicio;
+
+// --- Login local (localStorage) ---
+function getUsers(){
+  try{ return JSON.parse(localStorage.getItem('users')||'[]'); }catch(e){return []}
+}
+function saveUsers(u){ localStorage.setItem('users', JSON.stringify(u)); }
+function hashSimple(s){ // NO usar en producción — solo demo
+  let h=0; for(let i=0;i<s.length;i++){ h=(h<<5)-h + s.charCodeAt(i); h|=0; } return String(h);
+}
+function attachLoginHandlers(){
+  const rf = document.getElementById('registerForm');
+  const lf = document.getElementById('loginForm');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const loginMsg = document.getElementById('loginMsg');
+
+  if(rf) rf.onsubmit = e=>{
+    e.preventDefault();
+    const name = document.getElementById('r_name').value.trim();
+    const email = document.getElementById('r_email').value.trim().toLowerCase();
+    const pass = document.getElementById('r_pass').value;
+    if(!name||!email||!pass){ loginMsg.textContent='Completa todos los campos'; return; }
+    const users = getUsers();
+    if(users.find(u=>u.email===email)){ loginMsg.textContent='Usuario ya existe'; return; }
+    users.push({name,email,passHash:hashSimple(pass),created:Date.now()});
+    saveUsers(users);
+    loginMsg.textContent='Registrado! Ahora inicia sesión.';
+    rf.reset();
+  };
+
+  if(lf) lf.onsubmit = e=>{
+    e.preventDefault();
+    const email = document.getElementById('l_email').value.trim().toLowerCase();
+    const pass = document.getElementById('l_pass').value;
+    const users = getUsers();
+    const u = users.find(x=>x.email===email && x.passHash===hashSimple(pass));
+    if(!u){ loginMsg.textContent='Credenciales inválidas'; return; }
+    // guarda sesión local
+    localStorage.setItem('session', JSON.stringify({email:u.email,name:u.name,login:Date.now()}));
+    loginMsg.textContent='Sesión iniciada: '+u.name;
+    document.getElementById('userBadge').textContent = 'Hola, '+u.name;
+    logoutBtn.style.display='inline-block';
+    lf.reset();
+  };
+
+  if(logoutBtn) logoutBtn.onclick = ()=>{
+    localStorage.removeItem('session');
+    document.getElementById('userBadge').textContent = 'No autenticado';
+    loginMsg.textContent='Sesión cerrada';
+    logoutBtn.style.display='none';
+  };
+
+  // show logout if session exists
+  const s = localStorage.getItem('session');
+  if(s){ try{ const so = JSON.parse(s); document.getElementById('userBadge').textContent = 'Hola, '+so.name; logoutBtn.style.display='inline-block'; }catch(e){} }
+}
+
+// Attach on first load if login section rendered
+attachLoginHandlers();
+
+// --- Service Worker registration (PWA / offline support) ---
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').then(()=>console.log('sw registered')).catch(e=>console.log('sw failed',e));
+}
+
+</script>
+
+<!-- Para facilitar: incluimos aquí el contenido del service worker como comentario para crear archivo sw.js -->
+<!-- sw.js -->
+<!--
+const CACHE_NAME = 'tutorial-pwa-v1';
+const ASSETS = [
+  '/', '/index.html'
+  // añade aquí paths de recursos, imágenes y scripts
+];
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS)));
+});
+self.addEventListener('fetch', e => {
+  e.respondWith(caches.match(e.request).then(res => res || fetch(e.request)));
+});
+-->
+
+</body>
+</html>
